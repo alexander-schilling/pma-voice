@@ -6,7 +6,10 @@ description 'VOIP built using FiveM\'s built in mumble.'
 
 lua54 'yes'
 
-shared_script 'shared.lua'
+shared_scripts {
+    '@extendedmode/imports.lua',
+    'shared.lua'
+}
 
 client_scripts {
     'client/**/*.lua',

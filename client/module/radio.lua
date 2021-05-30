@@ -111,14 +111,13 @@ end)
 --- check if the player is dead
 --- seperating this so if people use different methods they can customize
 --- it to their need as this will likely never be changed.
+
+local IsDead = false
+AddEventHandler('as_health:onPlayerDeath', function() IsDead = true end)
+AddEventHandler('as_health:playerSpawned', function() IsDead = false end)
+
 function isDead()
-	if GetResourceState("pma-ambulance") ~= "missing" then
-		if LocalPlayer.state.isDead then
-			return true
-		end
-	elseif IsPlayerDead(PlayerId()) then
-		return true
-	end
+	return IsDead
 end
 
 RegisterCommand('+radiotalk', function()
@@ -165,7 +164,7 @@ RegisterCommand('-radiotalk', function()
 		TriggerServerEvent('pma-voice:setTalkingOnRadio', false)
 	end
 end, false)
-RegisterKeyMapping('+radiotalk', 'Talk over Radio', 'keyboard', GetConvar('voice_defaultRadio', 'LMENU'))
+RegisterKeyMapping('+radiotalk', 'Talk over Radio', 'keyboard', GetConvar('voice_defaultRadio', 'CAPITAL'))
 
 --- event syncRadio
 --- syncs the players radio, only happens if the radio was set server side.

@@ -7,11 +7,20 @@ local volumes = {
 }
 plyState = LocalPlayer.state
 local micClicks = true
+PlayerLoaded = false
 playerServerId = GetPlayerServerId(PlayerId())
 radioEnabled, radioPressed, mode, radioChannel, callChannel = false, false, 2, 0, 0
 
 radioData = {}
 callData = {}
+
+CreateThread(function()
+	while not ExM.IsPlayerLoaded() do
+		Wait(500)
+	end
+
+	PlayerLoaded = true
+end)
 
 -- TODO: Convert the last Cfg to a Convar, while still keeping it simple.
 AddEventHandler('pma-voice:settingsCallback', function(cb)
@@ -159,7 +168,7 @@ end
 
 --- function playMicClicks
 ---plays the mic click if the player has them enabled.
----@param clickType boolean whether to play the 'on' or 'off' click. 
+---@param clickType boolean whether to play the 'on' or 'off' click.
 function playMicClicks(clickType)
 	if micClicks ~= 'true' then return end
 	SendNUIMessage({
@@ -195,10 +204,10 @@ RegisterCommand('-cycleproximity', function()
 end)
 RegisterKeyMapping('+cycleproximity', 'Cycle Proximity', 'keyboard', GetConvar('voice_defaultCycle', 'F11'))
 
---- Toggles the current player muted 
-function toggleMute() 
+--- Toggles the current player muted
+function toggleMute()
 	playerMuted = not playerMuted
-	
+
 	if playerMuted then
 		plyState:set('proximity', {
 			index = 0,
@@ -286,9 +295,9 @@ local function getGridZone()
 	-- this code might be hard to follow
 	return (
 		--[[ 31 is the initial offses]]
-		math.floor( 31 * ( --[[ offset from the original zone should return a multiple]] zoneOffset) + 
+		math.floor( 31 * ( --[[ offset from the original zone should return a multiple]] zoneOffset) +
 	--[[ returns -6 * zoneOffset so we want to offset it ]]
-	(zoneOffset * 6) - 6 )) 
+	(zoneOffset * 6) - 6 ))
 	+ (--[[ Offset routing bucket by 5 (we listen to closest 5 channels) + 5 (routing starts at 0)]]((currentRouting) * 5) + 5) + math.ceil((plyPos.x + plyPos.y) / (zoneRadius))
 end
 
@@ -317,6 +326,11 @@ Citizen.CreateThread(function()
 	TriggerEvent('chat:addSuggestion', '/mute', 'Mutes the player with the specified id', {
 		{ name = "player id", help = "the player to toggle mute" }
 	})
+
+	while not PlayerLoaded do
+		Wait(500)
+	end
+
 	while true do
 		-- wait for reconnection, trying to set your voice channel when theres nothing to set it to is useless.
 		while not MumbleIsConnected() do
@@ -408,11 +422,15 @@ AddEventHandler('onClientResourceStart', function(resource)
 	MumbleClearVoiceTarget(1)
 	MumbleSetVoiceTarget(1)
 
+	while not PlayerLoaded do
+		Wait(500)
+	end
+
 	updateZone()
 
 	print('Script initialization finished.')
 
-	-- not waiting right here (in testing) let to some cases of the UI 
+	-- not waiting right here (in testing) let to some cases of the UI
 	-- just not working at all.
 	Wait(1000)
 	if GetConvarInt('voice_enableUi', 1) == 1 then

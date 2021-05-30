@@ -51,7 +51,7 @@ end)
 ---@param routingBucket number the routing bucket to set them to
 function updateRoutingBucket(source, routingBucket)
 	local route
-	-- make it optional to provide the routing bucket just incase 
+	-- make it optional to provide the routing bucket just incase
 	-- people use another resource to manage their routing buckets.
 	if routingBucket then
 		SetPlayerRoutingBucket(source, routingBucket)
