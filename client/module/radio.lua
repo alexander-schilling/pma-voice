@@ -33,6 +33,7 @@ function syncRadioData(radioTable, localPlyRadioName)
 	if GetConvarInt("voice_syncPlayerNames", 0) == 1 then
 		radioNames[playerServerId] = localPlyRadioName
 	end
+	updateRadioPlayersUi()
 end
 
 RegisterNetEvent('pma-voice:syncRadioData', syncRadioData)
@@ -49,6 +50,9 @@ function setTalkingOnRadio(plySource, enabled)
 	local enabled = enabled or callData[plySource]
 	toggleVoice(plySource, enabled, 'radio')
 	playMicClicks(enabled)
+	sendUIMessage({
+		updateRadioPlayer = json.encode(getPlayerRadioData(plySource, enabled))
+	})
 end
 RegisterNetEvent('pma-voice:setTalkingOnRadio', setTalkingOnRadio)
 
@@ -65,6 +69,9 @@ function addPlayerToRadio(plySource, plyRadioName)
 	if radioPressed then
 		addVoiceTargets(radioData, callData)
 	end
+	sendUIMessage({
+		addRadioPlayer = json.encode(getPlayerRadioData(plySource, false))
+	})
 end
 RegisterNetEvent('pma-voice:addPlayerToRadio', addPlayerToRadio)
 
@@ -86,6 +93,7 @@ function removePlayerFromRadio(plySource)
 		radioNames = {}
 		radioData = {}
 		addVoiceTargets(callData)
+		updateRadioPlayersUi()
 	else
 		toggleVoice(plySource, false, 'radio')
 		if radioPressed then
@@ -98,6 +106,9 @@ function removePlayerFromRadio(plySource)
 		if GetConvarInt("voice_syncPlayerNames", 0) == 1 then
 			radioNames[plySource] = nil
 		end
+		sendUIMessage({
+			removeRadioPlayer = plySource
+		})
 	end
 end
 
@@ -291,3 +302,23 @@ local function removeRadioDisableBit(bit)
 end
 exports("removeRadioDisableBit", removeRadioDisableBit)
 
+function updateRadioPlayersUi()
+	local radioPlayers = {}
+
+	for playerId,isTalking in pairs(radioData) do
+		table.insert(radioPlayers, getPlayerRadioData(playerId, isTalking))
+	end
+
+	sendUIMessage({
+		radioPlayers = json.encode(radioPlayers)
+	})
+end
+
+function getPlayerRadioData(playerId, isTalking)
+	return {
+		id = playerId,
+		name = radioNames[playerId] or '',
+		talking = isTalking,
+		isSource = playerId == playerServerId
+	}
+end
