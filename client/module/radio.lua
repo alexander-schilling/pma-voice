@@ -10,8 +10,8 @@ end
 --- event syncRadioData
 --- syncs the current players on the radio to the client
 ---@param radioTable table the table of the current players on the radio
----@param localPlyRadioName string the local players name
-function syncRadioData(radioTable, localPlyRadioName)
+---@param plyRadioNames table the radio players name table
+function syncRadioData(radioTable, plyRadioNames)
 	radioData = radioTable
 	logger.info('[radio] Syncing radio table.')
 	if GetConvarInt('voice_debugMode', 0) >= 4 then
@@ -31,7 +31,7 @@ function syncRadioData(radioTable, localPlyRadioName)
 		radioEnabled = isEnabled
 	})
 	if GetConvarInt("voice_syncPlayerNames", 0) == 1 then
-		radioNames[playerServerId] = localPlyRadioName
+		radioNames = plyRadioNames
 	end
 	updateRadioPlayersUi()
 end
@@ -168,6 +168,12 @@ exports('getRadioAnimState', function()
 	return disableRadioAnim
 end)
 
+-- exports getRadioChannel
+--- returns the current radio channel
+exports('getRadioChannel', function()
+	return isRadioEnabled() and radioChannel or 0
+end)
+
 --- check if the player is dead
 --- seperating this so if people use different methods they can customize
 --- it to their need as this will likely never be changed
@@ -278,7 +284,7 @@ RegisterNetEvent('pma-voice:clSetPlayerRadio', syncRadio)
 ---@param wasRadioEnabled boolean whether radio is enabled or not
 function handleRadioEnabledChanged(wasRadioEnabled)
 	if wasRadioEnabled then
-		syncRadioData(radioData, "")
+		syncRadioData(radioData, radioNames)
 	else
 		removePlayerFromRadio(playerServerId)
 	end

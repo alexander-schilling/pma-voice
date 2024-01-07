@@ -1,4 +1,5 @@
 local radioChecks = {}
+local radioNames = {}
 
 --- checks if the player can join the channel specified
 --- @param source number the source of the player
@@ -63,7 +64,9 @@ function addPlayerToRadio(source, radioChannel)
 	-- check if the channel exists, if it does set the varaible to it
 	-- if not create it (basically if not radiodata make radiodata)
 	radioData[radioChannel] = radioData[radioChannel] or {}
+	radioNames[radioChannel] = radioNames[radioChannel] or {}
 	local plyName = radioNameGetter(source)
+	radioNames[radioChannel][source] = plyName
 	for player, _ in pairs(radioData[radioChannel]) do
 		TriggerClientEvent('pma-voice:addPlayerToRadio', player, source, plyName)
 	end
@@ -71,7 +74,7 @@ function addPlayerToRadio(source, radioChannel)
 	voiceData[source].radio = radioChannel
 	radioData[radioChannel][source] = false
 	TriggerClientEvent('pma-voice:syncRadioData', source, radioData[radioChannel],
-		GetConvarInt("voice_syncPlayerNames", 0) == 1 and plyName)
+		GetConvarInt("voice_syncPlayerNames", 0) == 1 and radioNames[radioChannel])
 	return true
 end
 
@@ -81,10 +84,12 @@ end
 function removePlayerFromRadio(source, radioChannel)
 	logger.verbose('[radio] Removed %s from radio %s', source, radioChannel)
 	radioData[radioChannel] = radioData[radioChannel] or {}
+	radioNames[radioChannel] = radioNames[radioChannel] or {}
 	for player, _ in pairs(radioData[radioChannel]) do
 		TriggerClientEvent('pma-voice:removePlayerFromRadio', player, source)
 	end
 	radioData[radioChannel][source] = nil
+	radioNames[radioChannel][source] = nil
 	voiceData[source] = voiceData[source] or defaultTable(source)
 	voiceData[source].radio = 0
 end
