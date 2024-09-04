@@ -1,6 +1,8 @@
 local radioChannel = 0
 local radioNames = {}
 local disableRadioAnim = false
+local radioProp = nil
+local isTalkingOnRadio = false
 
 ---@return boolean isEnabled if radioEnabled is true and LocalPlayer.state.disableRadio is 0 (no bits set)
 function isRadioEnabled()
@@ -212,7 +214,7 @@ RegisterCommand('+radiotalk', function()
 			local shouldPlayAnimation = isRadioAnimEnabled()
 			playMicClicks(true)
 			if shouldPlayAnimation then
-				RequestAnimDict('random@arrests')
+				RequestAnimDict(Cfg.AnimDict)
 			end
 			CreateThread(function()
 				TriggerEvent("pma-voice:radioActive", true)
@@ -223,11 +225,20 @@ RegisterCommand('+radiotalk', function()
 						checkFailed = true
 						break
 					end
-					if shouldPlayAnimation and HasAnimDictLoaded("random@arrests") then
-						if not IsEntityPlayingAnim(PlayerPedId(), "random@arrests", "generic_radio_enter", 3) then
-							TaskPlayAnim(PlayerPedId(), "random@arrests", "generic_radio_enter", 8.0, 2.0, -1, 50, 2.0, false,
+					if shouldPlayAnimation and HasAnimDictLoaded(Cfg.AnimDict) then
+						if not IsEntityPlayingAnim(PlayerPedId(), Cfg.AnimDict, Cfg.AnimName, 3) then
+							TaskPlayAnim(PlayerPedId(), Cfg.AnimDict, Cfg.AnimName, 8.0, 2.0, -1, 50, 2.0, false,
 								false,
 							false)
+
+							if Cfg.AttachPropToPed then
+								radioProp = CreateObject(Cfg.PropToAttach, 1.0, 1.0, 1.0, 1, 1, 0)
+								AttachEntityToEntity(radioProp, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 57005), 0.14, 0.03, -0.02,
+									-90.0000, 40.0,
+									-15.0, 1, 0, 0, 0, 2, 1)
+							end
+
+							isTalkingOnRadio = true
 						end
 					end
 					SetControlNormal(0, 249, 1.0)
@@ -260,7 +271,16 @@ RegisterCommand('-radiotalk', function()
 		LocalPlayer.state:set("radioActive", false, true);
 		playMicClicks(false)
 		if GetConvarInt('voice_enableRadioAnim', 1) == 1 then
-			StopAnimTask(PlayerPedId(), "random@arrests", "generic_radio_enter", -4.0)
+			if Cfg.AttachPropToPed then
+				if DoesEntityExist(radioProp) then
+					DetachEntity(radioProp, true, false)
+					DeleteObject(radioProp)
+				end
+				DeleteEntity(radioProp)
+				radioProp = nil
+			end
+			StopAnimTask(PlayerPedId(), Cfg.AnimDict, Cfg.AnimName, -4.0)
+			isTalkingOnRadio = false
 		end
 		TriggerServerEvent('pma-voice:setTalkingOnRadio', false)
 	end
