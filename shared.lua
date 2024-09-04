@@ -125,3 +125,8 @@ function type_check(...)
 		end
 	end
 end
+
+Cfg.AnimDict = "anim@male@holding_radio"
+Cfg.AnimName = "holding_radio_clip"
+Cfg.AttachPropToPed = true
+Cfg.PropToAttach = "prop_cs_hand_radio"
